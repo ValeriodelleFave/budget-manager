@@ -1,0 +1,34 @@
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Budget Manager</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="script.js"></script>
+</head>
+
+<body>
+    <h1>Budget Manager</h1>
+    <form>        
+        <div class="container">
+            <input class="custom-input" type="number" id="money" placeholder="0.00">
+            <label class="switch">
+                <input type="checkbox" id="expense" checked="true">
+                <span class="slider round"></span>
+            </label>
+        </div>
+
+        <div class="container">
+            <input class="custom-input" type="text" id="motivation" placeholder="Motivazione">
+        </div>
+
+        <div class="container">
+            <button type="button" onclick="send()">Invia</button>
+        </div>
+    </form>
+    <table id="results"></table>
+</body>
+
+</html>

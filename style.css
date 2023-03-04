@@ -1,0 +1,111 @@
+body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+form {
+    width: 315px;
+    display: flex;
+    flex-direction: column;
+}
+
+
+.container {
+    display: flex;
+    flex-direction: column;
+    padding: 1em 0;
+}
+
+.container:first-child {
+    display: flex;
+    flex-direction: row;
+    padding: 1em 0;
+}
+
+.container:last-child {
+    all: initial;
+    display: flex;
+    justify-content: center;
+    padding: 1em 0;
+}
+
+/**    Custom input   **/
+
+.custom-input {
+    border: none;
+    border-bottom: 1px grey solid;
+    padding-top: 5px;
+    padding-bottom: 5px;
+}
+
+.custom-input:focus-visible {
+    outline-offset: 1px;
+}
+
+/**    Switch with slider   **/
+
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 60px;
+    height: 34px;
+}
+
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #27ae60;
+    -webkit-transition: .4s;
+    transition: .4s;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 26px;
+    width: 26px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    -webkit-transition: .4s;
+    transition: .4s;
+}
+
+input:checked+.slider {
+    background-color: #c0392b;
+}
+
+input:focus+.slider {
+    box-shadow: 0 0 1px #c0392b;
+}
+
+input:checked+.slider:before {
+    -webkit-transform: translateX(26px);
+    -ms-transform: translateX(26px);
+    transform: translateX(26px);
+}
+
+.slider.round {
+    border-radius: 34px;
+}
+
+.slider.round:before {
+    border-radius: 50%;
+}
+
+/**    Send button   **/
+button {
+    padding: 0.5em 1em;
+    cursor: pointer;
+}
