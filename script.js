@@ -1,3 +1,7 @@
+const conf = {
+    dev: "http://localhost:3000/budget-management/",
+    prod: "https://my-endpoints.onrender.com/budget-management/"
+}
 async function send() {
     const object = {
         isExpense: document.getElementById("expense").checked ? true : false,
@@ -7,7 +11,7 @@ async function send() {
     };
     debugger
 
-    await fetch("http://localhost:3000/budget-management/", {
+    await fetch(conf.prod, {
         body: JSON.stringify(object),
         method: "POST",
         headers: {
@@ -18,7 +22,7 @@ async function send() {
 }
 
 async function getAllData() {
-    const data = await fetch("http://localhost:3000/budget-management/getAll", {
+    const data = await fetch(conf.prod + "getAll", {
             method: "GET"
         })
         .then(async response => await response.json());
