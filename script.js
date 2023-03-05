@@ -40,16 +40,19 @@ function formatDate(milliseconds) {
 
 function getTableTemplate(data) {
     let template = "";
-    const headers = ["Data", "Denaro", "Motivazione"];
+    const headers = ["Data", "Denaro", "Motivazione", "Azioni"];
 
-    headers.forEach(header => { // TODO: creare il tr tra i th
+    template += "<thead><tr>";
+    headers.forEach(header => {
         template += `
                 <th>
                     ${header}
                 </th>
         `;
     });
+    template += "</tr></thead>";
 
+    template += "<tbody>";
     data.forEach(element => {
         template += `
             <tr>
@@ -62,8 +65,18 @@ function getTableTemplate(data) {
                 <td>
                     <span>${element.motivation}</span>
                 </td>
+                <td>
+                    <span style="border-bottom: 1px solid black; cursor: pointer;" onclick="test()">Modifica</span>
+                    <span style="border-bottom: 1px solid black; cursor: pointer;" onclick="test()">Elimina</span>
+                </td>
             </tr>
         `;
     });
+    template += "</tbody>";
+
     return template;
+}
+
+function test() {
+    console.log("test");
 }
