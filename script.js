@@ -35,7 +35,7 @@ getAllData();
 
 function formatDate(milliseconds) {
     const date = new Date(milliseconds);
-    return `${date.getDay()}/${date.getMonth() + 1}/${date.getFullYear()}`;
+    return `${date.toLocaleDateString()}`;
 }
 
 function getTableTemplate(data) {
