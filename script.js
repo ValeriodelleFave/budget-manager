@@ -2,6 +2,8 @@ const conf = window.location.origin == "file:" || window.location.hostname == "1
     "http://localhost:3000/budget-management/" :
     "https://my-endpoints.onrender.com/budget-management/";
 
+getLastTen();
+
 async function send() {
     const object = {
         isExpense: document.getElementById("expense").checked ? true : false,
@@ -9,8 +11,6 @@ async function send() {
         motivation: document.getElementById("motivation").value,
         date: new Date().getTime()
     };
-    debugger
-
     await fetch(conf, {
         body: JSON.stringify(object),
         method: "POST",
@@ -18,20 +18,19 @@ async function send() {
             "Content-type": "application/json; charset=UTF-8"
         }
     });
-    getAllData();
+    getLastTen();
 }
 
-async function getAllData() {
-    const data = await fetch(conf + "getAll", {
-            method: "GET"
-        })
+async function getLastTen() {
+    const data = await fetch(conf + "getLastTen", {
+        method: "GET"
+    })
         .then(async response => await response.json());
-    console.log("All data: ", data);
 
 
     document.getElementById("results").innerHTML = getTableTemplate(data);
 }
-getAllData();
+
 
 function formatDate(milliseconds) {
     const date = new Date(milliseconds);
@@ -79,4 +78,13 @@ function getTableTemplate(data) {
 
 function test() {
     console.log("test");
+}
+
+async function getAll() {
+    const data = await fetch(conf + "getAll", {
+        method: "GET"
+    })
+        .then(async response => await response.json());
+
+    document.getElementById("results").innerHTML = getTableTemplate(data);
 }
