@@ -1,7 +1,20 @@
-const conf = window.location.origin == "file:" || window.location.hostname == "127.0.0.1" ?
+const conf = true ?
     "http://localhost:3000/budget-management/" :
     "https://my-endpoints.onrender.com/budget-management/";
-
+const map = new Map([
+    [1, "Gennaio"],
+    [2, "Febraio"],
+    [3, "Marzo"],
+    [4, "Aprile"],
+    [5, "Maggio"],
+    [6, "Giugno"],
+    [7, "Luglio"],
+    [8, "Agosto"],
+    [9, "Settembre"],
+    [10, "Ottobre"],
+    [11, "Novembre"],
+    [12, "Dicembre"],
+])
 getLastTen();
 
 async function send() {
@@ -76,9 +89,27 @@ function getTableTemplate(data) {
     return template;
 }
 
+async function getAllByMonth() {
+    const data = await fetch(conf + "getAllByMonth", {
+        method: "GET"
+    })
+        .then(response => response.json())
+        .then(data => data);
+
+    let html = ""
+
+    for (const month of data) {
+        html += `
+        <p>${map.get(month._id)}: ${month.total.toFixed(2)}</p>
+        `
+    }
+
+    document.getElementById("monthResults").innerHTML = html;
+}
 function test() {
     console.log("test");
 }
+test()
 
 async function getAll() {
     const data = await fetch(conf + "getAll", {
@@ -88,3 +119,4 @@ async function getAll() {
 
     document.getElementById("results").innerHTML = getTableTemplate(data);
 }
+
