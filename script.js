@@ -1,6 +1,7 @@
-const conf = true ?
+const conf = window.location.origin == "file:" || window.location.hostname == "127.0.0.1"  ?
     "http://localhost:3000/budget-management/" :
     "https://my-endpoints.onrender.com/budget-management/";
+    
 const map = new Map([
     [1, "Gennaio"],
     [2, "Febraio"],
@@ -14,7 +15,8 @@ const map = new Map([
     [10, "Ottobre"],
     [11, "Novembre"],
     [12, "Dicembre"],
-])
+]);
+
 getLastTen();
 
 async function send() {
