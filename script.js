@@ -26,6 +26,9 @@ async function send() {
         motivation: document.getElementById("motivation").value,
         date: new Date().getTime()
     };
+    if (object.isExpense) {
+        object.money = -object.money;
+    }
     await fetch(conf, {
         body: JSON.stringify(object),
         method: "POST",
@@ -74,7 +77,7 @@ function getTableTemplate(data) {
                     <span>${formatDate(element.date)}</span>
                 </td>
                 <td>
-                    <span>${(element.isExpense ? "-" : "") + element.money}</span>
+                    <span>${element.money}</span>
                 </td>
                 <td>
                     <span>${element.motivation}</span>
