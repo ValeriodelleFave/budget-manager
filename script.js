@@ -1,7 +1,7 @@
-const conf = window.location.origin == "file:" || window.location.hostname == "127.0.0.1"  ?
+const conf = window.location.origin == "file:" || window.location.hostname == "127.0.0.1" ?
     "http://localhost:3000/budget-management/" :
     "https://my-endpoints.onrender.com/budget-management/";
-    
+
 const map = new Map([
     [1, "Gennaio"],
     [2, "Febraio"],
@@ -17,16 +17,13 @@ const map = new Map([
     [12, "Dicembre"],
 ]);
 
-getLastTen();
-
 async function send() {
     const object = {
-        isExpense: document.getElementById("expense").checked ? true : false,
         money: Number(document.getElementById("money").value),
         motivation: document.getElementById("motivation").value,
         date: new Date().getTime()
     };
-    if (object.isExpense) {
+    if (document.getElementById("expense").checked) {
         object.money = -object.money;
     }
     await fetch(conf, {
@@ -40,15 +37,10 @@ async function send() {
 }
 
 async function getLastTen() {
-    const data = await fetch(conf + "getLastTen", {
-        method: "GET"
-    })
+    const data = await fetch(conf + "getLastTen", { method: "GET" })
         .then(async response => await response.json());
-
-
     document.getElementById("results").innerHTML = getTableTemplate(data);
 }
-
 
 function formatDate(milliseconds) {
     const date = new Date(milliseconds);
@@ -56,8 +48,8 @@ function formatDate(milliseconds) {
 }
 
 function getTableTemplate(data) {
-    let template = "";
     const headers = ["Data", "Denaro", "Motivazione", "Azioni"];
+    let template = "";
 
     template += "<thead><tr>";
     headers.forEach(header => {
@@ -95,33 +87,29 @@ function getTableTemplate(data) {
 }
 
 async function getAllByMonth() {
-    const data = await fetch(conf + "getAllByMonth", {
-        method: "GET"
-    })
+    const data = await fetch(conf + "getAllByMonth", { method: "GET" })
         .then(response => response.json())
         .then(data => data);
-
-    let html = ""
+    let html = "";
 
     for (const month of data) {
         html += `
         <p>${map.get(month._id)}: ${month.total.toFixed(2)}</p>
         `
     }
-
     document.getElementById("monthResults").innerHTML = html;
 }
+
 function test() {
     console.log("test");
 }
-test()
 
 async function getAll() {
-    const data = await fetch(conf + "getAll", {
-        method: "GET"
-    })
+    const data = await fetch(conf + "getAll", { method: "GET" })
         .then(async response => await response.json());
-
     document.getElementById("results").innerHTML = getTableTemplate(data);
 }
 
+
+getLastTen();
+test();
