@@ -15,24 +15,24 @@ const map = new Map([
     [12, "Dicembre"],
 ]);
 
-// async function send() {
-//     const object = {
-//         money: Number(document.getElementById("money").value),
-//         motivation: document.getElementById("motivation").value,
-//         date: new Date().getTime()
-//     };
-//     if (document.getElementById("expense").checked) {
-//         object.money = -object.money;
-//     }
-//     await fetch(conf, {
-//         body: JSON.stringify(object),
-//         method: "POST",
-//         headers: {
-//             "Content-type": "application/json; charset=UTF-8"
-//         }
-//     });
-//     getLastTen();
-// }
+async function send() {
+    const object = {
+        money: Number(document.getElementById("money").value),
+        motivation: document.getElementById("motivation").value,
+        date: new Date().getTime()
+    };
+    if (document.getElementById("expense").checked) {
+        object.money = -object.money;
+    }
+    await fetch(conf, {
+        body: JSON.stringify(object),
+        method: "POST",
+        headers: {
+            "Content-type": "application/json; charset=UTF-8"
+        }
+    });
+    getLastTen();
+}
 
 async function getLastTen() {
     const data = await fetch(conf + "getLastTen", { method: "GET" })
