@@ -15,6 +15,7 @@ form {
     display: flex;
     flex-direction: column;
     padding: 1em 0;
+    justify-content: space-between;
 }
 
 .container:first-child {
@@ -109,7 +110,7 @@ button {
     padding: 0.5em 1em;
     cursor: pointer;
     background-color: white;
-    border-radius: 20px;
+    border-radius: 5px;
     font-weight: bold;
 }
 
@@ -122,8 +123,22 @@ table {
     border: 1px solid black;
     border-radius: 5px;
     padding: 1em;
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
 }
 
 th, td {
     padding: 0.5em;
+}
+
+img {
+    aspect-ratio: 1/1;
+    max-width: 20px;
+    cursor: pointer;
+}
+
+#get-all-button {
+    border-top: none;
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
 }

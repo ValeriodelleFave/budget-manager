@@ -1,6 +1,4 @@
-const conf = window.location.origin == "file:" || window.location.hostname == "127.0.0.1" ?
-    "http://localhost:3000/budget-management/" :
-    "https://my-endpoints.onrender.com/budget-management/";
+const conf = "https://my-endpoints.onrender.com/budget-management/";
 
 const map = new Map([
     [1, "Gennaio"],
@@ -17,24 +15,24 @@ const map = new Map([
     [12, "Dicembre"],
 ]);
 
-async function send() {
-    const object = {
-        money: Number(document.getElementById("money").value),
-        motivation: document.getElementById("motivation").value,
-        date: new Date().getTime()
-    };
-    if (document.getElementById("expense").checked) {
-        object.money = -object.money;
-    }
-    await fetch(conf, {
-        body: JSON.stringify(object),
-        method: "POST",
-        headers: {
-            "Content-type": "application/json; charset=UTF-8"
-        }
-    });
-    getLastTen();
-}
+// async function send() {
+//     const object = {
+//         money: Number(document.getElementById("money").value),
+//         motivation: document.getElementById("motivation").value,
+//         date: new Date().getTime()
+//     };
+//     if (document.getElementById("expense").checked) {
+//         object.money = -object.money;
+//     }
+//     await fetch(conf, {
+//         body: JSON.stringify(object),
+//         method: "POST",
+//         headers: {
+//             "Content-type": "application/json; charset=UTF-8"
+//         }
+//     });
+//     getLastTen();
+// }
 
 async function getLastTen() {
     const data = await fetch(conf + "getLastTen", { method: "GET" })
@@ -75,8 +73,8 @@ function getTableTemplate(data) {
                     <span>${element.motivation}</span>
                 </td>
                 <td>
-                    <span style="border-bottom: 1px solid black; cursor: pointer;" onclick="test()">Modifica</span>
-                    <span style="border-bottom: 1px solid black; cursor: pointer;" onclick="test()">Elimina</span>
+                    <img src="./icons/edit.svg" alt="edit icon">
+                    <img src="./icons/delete.svg" alt="delete icon">
                 </td>
             </tr>
         `;
@@ -100,8 +98,12 @@ async function getAllByMonth() {
     document.getElementById("monthResults").innerHTML = html;
 }
 
-function test() {
-    console.log("test");
+function edit(id) {
+    console.log("edit", id);
+}
+
+function cancel(id) {
+    console.log("cancel", id);
 }
 
 async function getAll() {
@@ -112,4 +114,3 @@ async function getAll() {
 
 
 getLastTen();
-test();
