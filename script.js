@@ -1,4 +1,6 @@
-const conf = "https://my-endpoints.onrender.com/budget-management/";
+const conf = window.location.origin == "file:" || window.location.hostname == "127.0.0.1" ?
+    "http://localhost:3000/budget-management/" :
+    "https://my-endpoints.onrender.com/budget-management/";
 
 const map = new Map([
     [1, "Gennaio"],
