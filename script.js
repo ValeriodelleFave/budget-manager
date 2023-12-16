@@ -35,9 +35,9 @@ async function send() {
     });
     getLastTen();
 }
-
+let data;
 async function getLastTen() {
-    const data = await fetch(conf + "getLastTen", { method: "GET" })
+    data = await fetch(conf + "getLastTen", { method: "GET" })
         .then(async response => await response.json());
     document.getElementById("results").innerHTML = getTableTemplate(data);
 }
@@ -62,6 +62,7 @@ function getTableTemplate(data) {
     template += "</tr></thead>";
 
     template += "<tbody>";
+    let index = 0;
     data.forEach(element => {
         template += `
             <tr>
@@ -75,11 +76,12 @@ function getTableTemplate(data) {
                     <span>${element.motivation}</span>
                 </td>
                 <td>
-                    <img src="./icons/edit.svg" alt="edit icon">
-                    <img src="./icons/delete.svg" alt="delete icon">
+                    <img src="./icons/edit.svg" alt="edit icon" onClick="edit(${index})">
+                    <img src="./icons/delete.svg" alt="delete icon" onClick="cancel(${index})">
                 </td>
             </tr>
         `;
+        index++;
     });
     template += "</tbody>";
 
@@ -100,12 +102,12 @@ async function getAllByMonth() {
     document.getElementById("monthResults").innerHTML = html;
 }
 
-function edit(id) {
-    console.log("edit", id);
+function edit(index) {
+    console.log("edit", data[index]._id);
 }
 
-function cancel(id) {
-    console.log("cancel", id);
+function cancel(index) {
+    console.log("cancel", data[index]._id);
 }
 
 async function getAll() {
