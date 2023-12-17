@@ -106,8 +106,15 @@ function edit(index) {
     console.log("edit", data[index]._id);
 }
 
-function cancel(index) {
+async function cancel(index) {
     console.log("cancel", data[index]._id);
+    await fetch(conf + "delete/" + data[index]._id, {
+        method: "DELETE",
+        headers: {
+            "Content-type": "application/json; charset=UTF-8"
+        }
+    });
+    getLastTen();
 }
 
 async function getAll() {
