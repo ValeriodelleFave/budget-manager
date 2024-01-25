@@ -1,4 +1,8 @@
 "use strict";
+function formatDate(milliseconds) {
+    const date = new Date(milliseconds);
+    return `${date.toLocaleDateString()}`;
+}
 export function getTableTemplate(data) {
     const headers = ["Data", "Denaro", "Motivazione", "Azioni"];
     let template = "";
