@@ -96,7 +96,7 @@ async function getAllByMonth() {
 
     for (const month of data) {
         html += `
-        <p><strong>${map.get(month._id)}</strong>: <span>${month.income}</span> <span style="color:red">${month.expenditure}</span> <span style="color:green">${month.total.toFixed(2)}</span></p>
+        <p><strong>${map.get(month._id)}</strong>: <span>${month.income}</span> | <span style="color:red">${month.expenditure}</span> | <span style="color:green">${month.total > 0 ? month.total.toFixed(2) : ""}</span></p>
         `
     }
     document.getElementById("monthResults").innerHTML = html;
