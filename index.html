@@ -246,7 +246,7 @@
             const data = await fetch(conf + "getAllByMonth", { method: "GET" })
                 .then(response => response.json())
                 .then(data => data);
-            let html = "<p><strong>Mese</strong>: <span>Entrate</span> | <span style="color:red">Uscite</span> | <span style="color:green">Guadagno</span></p>";
+            let html = `<p><strong>Mese</strong>: <span>Entrate</span> | <span style="color:red">Uscite</span> | <span style="color:green">Guadagno</span></p>`;
 
             for (const month of data) {
                 html += `
