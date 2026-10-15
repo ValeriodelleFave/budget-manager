@@ -510,6 +510,48 @@
         <div id="monthResults"></div>
         <button onclick="getAllByMonth()">Get All By Month</button>
     </div>
+    <!-- Pulsante di installazione e diagnostica PWA per mobile -->
+    <div class="container" style="align-items: center; margin-top: 1em;">
+        <button id="install-button" style="display: none; background-color: #27ae60; color: white; border: none; padding: 0.8em 1.5em;">
+            📲 Installa App
+        </button>
+        <small id="pwa-debug" style="color: grey; margin-top: 0.5em; text-align: center;"></small>
+    </div>
+
+    <script>
+        let deferredPrompt;
+        const installBtn = document.getElementById("install-button");
+        const debugText = document.getElementById("pwa-debug");
+
+        // Controlla lo stato del Service Worker sullo schermo del telefono
+        if ("serviceWorker" in navigator) {
+            navigator.serviceWorker.register("./sw.js")
+                .then(reg => {
+                    debugText.textContent = "✅ Service Worker attivo (scope: " + reg.scope + ")";
+                })
+                .catch(err => {
+                    debugText.textContent = "❌ Errore Service Worker: " + err.message;
+                });
+        }
+
+        // Cattura l'evento di installazione di Chrome e mostra il pulsante
+        window.addEventListener("beforeinstallprompt", (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            installBtn.style.display = "block";
+            debugText.textContent = "✅ PWA pronta per l'installazione!";
+        });
+
+        installBtn.addEventListener("click", async () => {
+            if (!deferredPrompt) return;
+            deferredPrompt.prompt();
+            const { outcome } = await deferredPrompt.userChoice;
+            if (outcome === "accepted") {
+                installBtn.style.display = "none";
+            }
+            deferredPrompt = null;
+        });
+    </script>
 </body>
 
 </html>
