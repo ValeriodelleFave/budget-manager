@@ -18,6 +18,7 @@
             display: flex;
             flex-direction: column;
             align-items: center;
+            font-family: sans-serif;
         }
 
         form {
@@ -39,8 +40,29 @@
             padding: 1em 0;
         }
 
-        /**    Custom input   **/
+        /**    Banner Stato Connessione / Sync   **/
+        #status-banner {
+            display: none;
+            padding: 0.5em 1em;
+            border-radius: 5px;
+            font-size: 0.9em;
+            margin-bottom: 0.5em;
+            text-align: center;
+            width: 315px;
+            box-sizing: border-box;
+        }
 
+        .status-offline {
+            background-color: #f39c12;
+            color: white;
+        }
+
+        .status-syncing {
+            background-color: #2980b9;
+            color: white;
+        }
+
+        /**    Custom input   **/
         .custom-input {
             border: none;
             border-bottom: 1px grey solid;
@@ -53,7 +75,6 @@
         }
 
         /**    Switch with slider   **/
-
         .switch {
             position: relative;
             display: inline-block;
@@ -140,6 +161,11 @@
             padding: 0.5em;
         }
 
+        .pending-row {
+            opacity: 0.65;
+            font-style: italic;
+        }
+
         img {
             aspect-ratio: 1/1;
             max-width: 20px;
@@ -179,30 +205,163 @@
             [12, "Dicembre"],
         ]);
 
+        // --- Configurazione IndexedDB per la coda Offline ---
+        const DB_NAME = "BudgetOfflineDB";
+        const STORE_NAME = "pendingExpenses";
+
+        function openDB() {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open(DB_NAME, 1);
+                request.onupgradeneeded = event => {
+                    const db = event.target.result;
+                    if (!db.objectStoreNames.contains(STORE_NAME)) {
+                        db.createObjectStore(STORE_NAME, { keyPath: "tempId", autoIncrement: true });
+                    }
+                };
+                request.onsuccess = event => resolve(event.target.result);
+                request.onerror = event => reject(event.target.error);
+            });
+        }
+
+        async function saveOfflineExpense(expense) {
+            const db = await openDB();
+            return new Promise((resolve, reject) => {
+                const tx = db.transaction(STORE_NAME, "readwrite");
+                tx.objectStore(STORE_NAME).add(expense);
+                tx.oncomplete = () => resolve();
+                tx.onerror = event => reject(event.target.error);
+            });
+        }
+
+        async function getOfflineExpenses() {
+            const db = await openDB();
+            return new Promise((resolve, reject) => {
+                const tx = db.transaction(STORE_NAME, "readonly");
+                const request = tx.objectStore(STORE_NAME).getAll();
+                request.onsuccess = () => resolve(request.result);
+                request.onerror = event => reject(event.target.error);
+            });
+        }
+
+        async function deleteOfflineExpense(tempId) {
+            const db = await openDB();
+            return new Promise((resolve, reject) => {
+                const tx = db.transaction(STORE_NAME, "readwrite");
+                tx.objectStore(STORE_NAME).delete(tempId);
+                tx.oncomplete = () => resolve();
+                tx.onerror = event => reject(event.target.error);
+            });
+        }
+
+        // --- Sincronizzazione automatica col Server ---
+        async function syncOfflineExpenses() {
+            const pending = await getOfflineExpenses();
+            if (pending.length === 0) return;
+
+            updateBanner("Sincronizzazione di " + pending.length + " voci in corso...", "status-syncing");
+
+            for (const item of pending) {
+                const { tempId, ...payload } = item;
+                try {
+                    const response = await fetch(conf, {
+                        body: JSON.stringify(payload),
+                        method: "POST",
+                        headers: {
+                            "Content-type": "application/json; charset=UTF-8"
+                        }
+                    });
+                    if (response.ok) {
+                        await deleteOfflineExpense(tempId);
+                    }
+                } catch (err) {
+                    console.warn("Connessione ancora assente, riproverò più tardi.");
+                    break;
+                }
+            }
+
+            updateConnectionStatus();
+            getLastTen();
+        }
+
+        function updateBanner(message, className) {
+            const banner = document.getElementById("status-banner");
+            if (!banner) return;
+            if (!message) {
+                banner.style.display = "none";
+                banner.className = "";
+            } else {
+                banner.textContent = message;
+                banner.className = className;
+                banner.style.display = "block";
+            }
+        }
+
+        function updateConnectionStatus() {
+            if (!navigator.onLine) {
+                updateBanner("Modalità Offline: le nuove spese verranno messe in coda.", "status-offline");
+            } else {
+                updateBanner("", "");
+            }
+        }
+
+        // --- Funzioni Principali App ---
         async function send() {
+            const moneyInput = document.getElementById("money");
+            const motivationInput = document.getElementById("motivation");
+
+            if (!moneyInput.value) return;
+
             const object = {
-                money: Number(document.getElementById("money").value),
-                motivation: document.getElementById("motivation").value,
+                money: Number(moneyInput.value),
+                motivation: motivationInput.value,
                 date: new Date().getTime()
             };
             if (document.getElementById("expense").checked) {
                 object.money = -object.money;
             }
-            await fetch(conf, {
-                body: JSON.stringify(object),
-                method: "POST",
-                headers: {
-                    "Content-type": "application/json; charset=UTF-8"
+
+            try {
+                if (!navigator.onLine) throw new Error("Offline");
+
+                const response = await fetch(conf, {
+                    body: JSON.stringify(object),
+                    method: "POST",
+                    headers: {
+                        "Content-type": "application/json; charset=UTF-8"
+                    }
+                });
+
+                if (!response.ok) throw new Error("Errore di rete");
+            } catch (err) {
+                // Salva in IndexedDB se offline o server irraggiungibile
+                await saveOfflineExpense(object);
+
+                // Registra la sincronizzazione in background nel Service Worker (se supportata)
+                if ("serviceWorker" in navigator && "SyncManager" in window) {
+                    const reg = await navigator.serviceWorker.ready;
+                    try {
+                        await reg.sync.register("sync-expenses");
+                    } catch (syncErr) {
+                        console.log("Background Sync non disponibile, userò l'evento online.");
+                    }
                 }
-            });
+            }
+
+            moneyInput.value = "";
+            motivationInput.value = "";
             getLastTen();
         }
 
-        let data;
+        let data = [];
         async function getLastTen() {
-            data = await fetch(conf + "getLastTen", { method: "GET" })
-                .then(async response => await response.json());
-            document.getElementById("results").innerHTML = getTableTemplate(data);
+            try {
+                data = await fetch(conf + "getLastTen", { method: "GET" })
+                    .then(async response => await response.json());
+            } catch (err) {
+                data = [];
+            }
+            const pending = await getOfflineExpenses();
+            document.getElementById("results").innerHTML = getTableTemplate(data, pending);
         }
 
         function formatDate(milliseconds) {
@@ -210,34 +369,36 @@
             return `${date.toLocaleDateString()}`;
         }
 
-        function getTableTemplate(data) {
+        function getTableTemplate(serverData, pendingData = []) {
             const headers = ["Data", "Denaro", "Motivazione", "Azioni"];
-            let template = "";
-
-            template += "<thead><tr>";
+            let template = "<thead><tr>";
             headers.forEach(header => {
+                template += `<th>${header}</th>`;
+            });
+            template += "</tr></thead><tbody>";
+
+            // Mostra in cima le spese salvate offline in attesa di invio
+            pendingData.forEach(element => {
                 template += `
-                        <th>
-                            ${header}
-                        </th>
+                    <tr class="pending-row">
+                        <td><span>${formatDate(element.date)}</span></td>
+                        <td><span>${element.money}</span></td>
+                        <td><span>${element.motivation} (⏳ In coda)</span></td>
+                        <td>
+                            <span style="cursor:pointer;" title="Rimuovi dalla coda" onclick="cancelPending(${element.tempId})">❌</span>
+                        </td>
+                    </tr>
                 `;
             });
-            template += "</tr></thead>";
 
-            template += "<tbody>";
+            // Mostra le spese salvate sul server
             let index = 0;
-            data.forEach(element => {
+            serverData.forEach(element => {
                 template += `
                     <tr>
-                        <td>
-                            <span>${formatDate(element.date)}</span>
-                        </td>
-                        <td>
-                            <span>${element.money}</span>
-                        </td>
-                        <td>
-                            <span>${element.motivation}</span>
-                        </td>
+                        <td><span>${formatDate(element.date)}</span></td>
+                        <td><span>${element.money}</span></td>
+                        <td><span>${element.motivation}</span></td>
                         <td>
                             <img src="./icons/delete.svg" alt="delete icon" onClick="cancel(${index})">
                         </td>
@@ -248,6 +409,11 @@
             template += "</tbody>";
 
             return template;
+        }
+
+        async function cancelPending(tempId) {
+            await deleteOfflineExpense(tempId);
+            getLastTen();
         }
 
         async function getAllByMonth() {
@@ -276,17 +442,38 @@
         async function getAll() {
             data = await fetch(conf + "getAll", { method: "GET" })
                 .then(async response => await response.json());
-            document.getElementById("results").innerHTML = getTableTemplate(data);
+            const pending = await getOfflineExpenses();
+            document.getElementById("results").innerHTML = getTableTemplate(data, pending);
         }
 
-        getLastTen();
+        // Listener per stato rete e messaggi dal Service Worker
+        window.addEventListener("load", () => {
+            updateConnectionStatus();
+            getLastTen();
+            if (navigator.onLine) {
+                syncOfflineExpenses();
+            }
+        });
 
-        // Registrazione del Service Worker
+        window.addEventListener("online", () => {
+            updateConnectionStatus();
+            syncOfflineExpenses();
+        });
+
+        window.addEventListener("offline", updateConnectionStatus);
+
         if ("serviceWorker" in navigator) {
             window.addEventListener("load", () => {
                 navigator.serviceWorker.register("./sw.js")
                     .then(reg => console.log("Service Worker registrato:", reg.scope))
                     .catch(err => console.error("Errore Service Worker:", err));
+            });
+
+            // Aggiorna la tabella quando il Service Worker completa la sincronizzazione in background
+            navigator.serviceWorker.addEventListener("message", event => {
+                if (event.data && event.data.type === "SYNC_COMPLETED") {
+                    getLastTen();
+                }
             });
         }
     </script>
@@ -294,6 +481,8 @@
 
 <body>
     <h1>Budget Manager</h1>
+    <div id="status-banner"></div>
+
     <form>        
         <div class="container">
             <label class="switch">
