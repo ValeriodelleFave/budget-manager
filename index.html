@@ -178,6 +178,21 @@
             border-top-right-radius: 0;
         }
 
+        /**    Dashboard   **/
+        .dashboard-box {
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            padding: 1em;
+            width: 315px;
+            box-sizing: border-box;
+            background-color: #f9f9f9;
+            text-align: center;
+        }
+        .dashboard-box p {
+            margin: 0.5em 0;
+            font-size: 1.1em;
+        }
+
         form,
         div,
         h1 {
@@ -191,18 +206,9 @@
             "https://my-endpoints.onrender.com/budget-management/";
 
         const map = new Map([
-            [1, "Gennaio"],
-            [2, "Febbraio"],
-            [3, "Marzo"],
-            [4, "Aprile"],
-            [5, "Maggio"],
-            [6, "Giugno"],
-            [7, "Luglio"],
-            [8, "Agosto"],
-            [9, "Settembre"],
-            [10, "Ottobre"],
-            [11, "Novembre"],
-            [12, "Dicembre"],
+            [1, "Gennaio"], [2, "Febbraio"], [3, "Marzo"], [4, "Aprile"],
+            [5, "Maggio"], [6, "Giugno"], [7, "Luglio"], [8, "Agosto"],
+            [9, "Settembre"], [10, "Ottobre"], [11, "Novembre"], [12, "Dicembre"],
         ]);
 
         // --- Configurazione IndexedDB per la coda Offline ---
@@ -333,10 +339,7 @@
 
                 if (!response.ok) throw new Error("Errore di rete");
             } catch (err) {
-                // Salva in IndexedDB se offline o server irraggiungibile
                 await saveOfflineExpense(object);
-
-                // Registra la sincronizzazione in background nel Service Worker (se supportata)
                 if ("serviceWorker" in navigator && "SyncManager" in window) {
                     const reg = await navigator.serviceWorker.ready;
                     try {
@@ -377,7 +380,6 @@
             });
             template += "</tr></thead><tbody>";
 
-            // Mostra in cima le spese salvate offline in attesa di invio
             pendingData.forEach(element => {
                 template += `
                     <tr class="pending-row">
@@ -391,7 +393,6 @@
                 `;
             });
 
-            // Mostra le spese salvate sul server
             let index = 0;
             serverData.forEach(element => {
                 template += `
@@ -439,11 +440,42 @@
             getLastTen();
         }
 
+        // --- Aggiornamento Dashboard Globale ---
+        function updateDashboard(allData) {
+            let entrate = 0;
+            let uscite = 0;
+
+            allData.forEach(item => {
+                // Converto in Number per sicurezza nel calcolo
+                const value = Number(item.money);
+                if (value > 0) {
+                    entrate += value;
+                } else {
+                    uscite += Math.abs(value);
+                }
+            });
+
+            const saldo = entrate - uscite;
+
+            const html = `
+                <p><strong>Entrate:</strong> <span style="color: #27ae60;">${entrate.toFixed(2)} €</span></p>
+                <p><strong>Uscite:</strong> <span style="color: #c0392b;">${uscite.toFixed(2)} €</span></p>
+                <hr>
+                <p><strong>Saldo Finale:</strong> <span style="color: ${saldo >= 0 ? '#27ae60' : '#c0392b'};">${saldo.toFixed(2)} €</span></p>
+            `;
+
+            document.getElementById("dashboard-content").innerHTML = html;
+            document.getElementById("dashboard-container").style.display = "block";
+        }
+
         async function getAll() {
             data = await fetch(conf + "getAll", { method: "GET" })
                 .then(async response => await response.json());
             const pending = await getOfflineExpenses();
             document.getElementById("results").innerHTML = getTableTemplate(data, pending);
+            
+            // Popola e mostra la dashboard dopo aver ricevuto tutti i dati
+            updateDashboard(data);
         }
 
         // Listener per stato rete e messaggi dal Service Worker
@@ -469,7 +501,6 @@
                     .catch(err => console.error("Errore Service Worker:", err));
             });
 
-            // Aggiorna la tabella quando il Service Worker completa la sincronizzazione in background
             navigator.serviceWorker.addEventListener("message", event => {
                 if (event.data && event.data.type === "SYNC_COMPLETED") {
                     getLastTen();
@@ -510,6 +541,15 @@
         <div id="monthResults"></div>
         <button onclick="getAllByMonth()">Get All By Month</button>
     </div>
+
+    <!-- Nuova Dashboard Totali -->
+    <div class="container" id="dashboard-container" style="display: none;">
+        <div class="dashboard-box">
+            <h3>Riepilogo Totale</h3>
+            <div id="dashboard-content"></div>
+        </div>
+    </div>
+
     <!-- Pulsante di installazione e diagnostica PWA per mobile -->
     <div class="container" style="align-items: center; margin-top: 1em;">
         <button id="install-button" style="display: none; background-color: #27ae60; color: white; border: none; padding: 0.8em 1.5em;">
@@ -523,7 +563,6 @@
         const installBtn = document.getElementById("install-button");
         const debugText = document.getElementById("pwa-debug");
 
-        // Controlla lo stato del Service Worker sullo schermo del telefono
         if ("serviceWorker" in navigator) {
             navigator.serviceWorker.register("./sw.js")
                 .then(reg => {
@@ -534,7 +573,6 @@
                 });
         }
 
-        // Cattura l'evento di installazione di Chrome e mostra il pulsante
         window.addEventListener("beforeinstallprompt", (e) => {
             e.preventDefault();
             deferredPrompt = e;
